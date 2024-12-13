@@ -1,4 +1,4 @@
-NAME=testy-tester
+NAME=cronjob-sandbox
 
 template:
 	helm template \

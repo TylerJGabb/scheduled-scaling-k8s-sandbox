@@ -4,6 +4,7 @@ apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: cronjob-1
+  namespace: cronjob-sandbox
 spec:
   schedule: "* * * * *"
   timeZone: America/New_York
@@ -17,7 +18,12 @@ spec:
             args:
             - /bin/sh
             - -c
-            - echo hello from job 1
+            - echo $CJ_NAME says $MESSAGE
+            env:
+            - name: MESSAGE
+              value: "hello from job 1"
+            - name: CJ_NAME
+              value: "cronjob-1"
           restartPolicy: OnFailure
 ---
 # Source: scheduled-scaling-sandbox/templates/cronjobs.yaml
@@ -25,6 +31,7 @@ apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: cronjob-2
+  namespace: cronjob-sandbox
 spec:
   schedule: "* * * * *"
   timeZone: America/New_York
@@ -38,5 +45,10 @@ spec:
             args:
             - /bin/sh
             - -c
-            - echo hello from job 2
+            - echo $CJ_NAME says $MESSAGE
+            env:
+            - name: MESSAGE
+              value: "hello from job 2"
+            - name: CJ_NAME
+              value: "cronjob-2"
           restartPolicy: OnFailure

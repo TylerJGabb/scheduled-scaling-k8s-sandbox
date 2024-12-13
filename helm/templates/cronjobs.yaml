@@ -1,9 +1,10 @@
 {{- $scheduledScaling := fromJson .Values.scheduledScaling }}
 {{- range $scheduledScaling.schedules }}
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ .name }}
+  namespace: {{ $.Release.Namespace}}
 spec:
   schedule: "{{ .cron }}"
   timeZone: America/New_York
@@ -17,7 +18,12 @@ spec:
             args:
             - /bin/sh
             - -c
-            - echo {{ .message }}
+            - echo $CJ_NAME says $MESSAGE
+            env:
+            - name: MESSAGE
+              value: "{{ .message }}"
+            - name: CJ_NAME
+              value: "{{ .name }}"
           restartPolicy: OnFailure
 ---
 {{- end }}
