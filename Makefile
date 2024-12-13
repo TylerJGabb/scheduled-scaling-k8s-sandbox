@@ -8,15 +8,6 @@ template:
 		./helm \
 		> out.yaml
 
-another:
-	helm template \
-		--debug \
-		--release-name $(NAME) \
-		--namespace $(NAME) \
-		-f another.values.yaml \
-		./helm \
-		> out.yaml
-
 install:
 	helm upgrade --install $(NAME) \
 		--namespace $(NAME) \

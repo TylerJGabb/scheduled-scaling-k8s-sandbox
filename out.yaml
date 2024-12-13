@@ -1,54 +1,109 @@
 ---
 # Source: scheduled-scaling-sandbox/templates/cronjobs.yaml
-apiVersion: batch/v1beta1
-kind: CronJob
+apiVersion: v1
+kind: ServiceAccount
 metadata:
-  name: cronjob-1
+  name: scaling-service-account
   namespace: cronjob-sandbox
-spec:
-  schedule: "* * * * *"
-  timeZone: America/New_York
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          containers:
-          - name: job
-            image: busybox
-            args:
-            - /bin/sh
-            - -c
-            - echo $CJ_NAME says $MESSAGE
-            env:
-            - name: MESSAGE
-              value: "hello from job 1"
-            - name: CJ_NAME
-              value: "cronjob-1"
-          restartPolicy: OnFailure
 ---
 # Source: scheduled-scaling-sandbox/templates/cronjobs.yaml
-apiVersion: batch/v1beta1
-kind: CronJob
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
 metadata:
-  name: cronjob-2
+  name: scaling-role
+  namespace: cronjob-sandbox
+rules:
+- apiGroups: ["apps"] # API group for Deployments
+  resources: 
+  - "deployments"
+  - "deployments/scale"
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
+  - "patch"
+  - "update"
+---
+# Source: scheduled-scaling-sandbox/templates/cronjobs.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: scaling-role-binding
+  namespace: cronjob-sandbox
+subjects:
+- kind: ServiceAccount
+  name: scaling-service-account
+  namespace: cronjob-sandbox
+roleRef:
+  kind: Role
+  name: scaling-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: scheduled-scaling-sandbox/templates/deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo-deploy
   namespace: cronjob-sandbox
 spec:
-  schedule: "* * * * *"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-app
+  template:
+    metadata:
+      labels:
+        app: hello-app
+    spec:
+      containers:
+      - name: hello-container
+        image: busybox
+        command: ["sh", "-c", "while true; do echo hello; sleep 1; done"]
+---
+# Source: scheduled-scaling-sandbox/templates/cronjobs.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scale-to-2-every-2nd-minute
+  namespace: cronjob-sandbox
+spec:
+  concurrencyPolicy: Replace
+  schedule: "*/2 * * * *"
   timeZone: America/New_York
   jobTemplate:
     spec:
       template:
         spec:
+          restartPolicy: OnFailure
+          serviceAccountName: scaling-service-account
           containers:
-          - name: job
-            image: busybox
-            args:
+          - name: scaler
+            image: bitnami/kubectl:latest
+            command:
             - /bin/sh
             - -c
-            - echo $CJ_NAME says $MESSAGE
-            env:
-            - name: MESSAGE
-              value: "hello from job 2"
-            - name: CJ_NAME
-              value: "cronjob-2"
+            - kubectl scale deployment -n cronjob-sandbox foo-deploy --replicas=2
+---
+# Source: scheduled-scaling-sandbox/templates/cronjobs.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scale-to-3-every-3rd-minute
+  namespace: cronjob-sandbox
+spec:
+  concurrencyPolicy: Replace
+  schedule: "*/3 * * * *"
+  timeZone: America/New_York
+  jobTemplate:
+    spec:
+      template:
+        spec:
           restartPolicy: OnFailure
+          serviceAccountName: scaling-service-account
+          containers:
+          - name: scaler
+            image: bitnami/kubectl:latest
+            command:
+            - /bin/sh
+            - -c
+            - kubectl scale deployment -n cronjob-sandbox foo-deploy --replicas=5
