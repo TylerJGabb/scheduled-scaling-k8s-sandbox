@@ -9,7 +9,7 @@ scheduledScaling: |
       {
         "name": "scale to 3 every 3rd minute",
         "cron": "*/3 * * * *",
-        "replicas": 5
+        "replicas": 3
       }
     ]
   }
