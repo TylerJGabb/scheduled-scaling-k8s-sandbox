@@ -1,0 +1,23 @@
+{{- $scheduledScaling := fromJson .Values.scheduledScaling }}
+{{- range $scheduledScaling.schedules }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ .name }}
+spec:
+  schedule: "{{ .cron }}"
+  timeZone: America/New_York
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: job
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - echo {{ .message }}
+          restartPolicy: OnFailure
+---
+{{- end }}

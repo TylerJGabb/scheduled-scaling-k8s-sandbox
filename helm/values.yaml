@@ -1,0 +1,24 @@
+scheduledScaling: |
+  {
+    "schedules": [
+      {
+        "name": "cronjob-1",
+        "cron": "* * * * *",
+        "message": "hello from job 1"
+      },
+      {
+        "name": "cronjob-2",
+        "cron": "* * * * *",
+        "message": "hello from job 2"
+      }
+    ]
+  }
+
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: {{ .name }}
+# data:
+#   value: "{{ .message }}"
+#   cron: "{{ .cron }}"
+# ---

@@ -1,0 +1,20 @@
+scheduledScaling: |
+  {
+    "schedules": [
+      {
+        "name": "from-harness-1",
+        "cron": "1 * * * *",
+        "message": "hello from harness 1"
+      },
+      {
+        "name": "from-harness-2",
+        "cron": "2 * * * *",
+        "message": "hello from harness 2"
+      },
+      {
+        "name": "from-harness-3",
+        "cron": "3 * * * *",
+        "message": "hello from harness 3"
+      }
+    ]
+  }

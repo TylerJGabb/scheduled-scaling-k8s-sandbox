@@ -1,0 +1,42 @@
+---
+# Source: scheduled-scaling-sandbox/templates/cronjobs.yaml
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: cronjob-1
+spec:
+  schedule: "* * * * *"
+  timeZone: America/New_York
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: job
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - echo hello from job 1
+          restartPolicy: OnFailure
+---
+# Source: scheduled-scaling-sandbox/templates/cronjobs.yaml
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: cronjob-2
+spec:
+  schedule: "* * * * *"
+  timeZone: America/New_York
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: job
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - echo hello from job 2
+          restartPolicy: OnFailure
