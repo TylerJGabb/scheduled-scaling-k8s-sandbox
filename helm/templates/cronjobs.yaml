@@ -1,3 +1,4 @@
+{{ if .Values.scheduledScaling.enabled }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -35,7 +36,7 @@ roleRef:
   name: scaling-role
   apiGroup: rbac.authorization.k8s.io
 ---
-{{- $scheduledScaling := fromJson .Values.scheduledScaling }}
+{{- $scheduledScaling := fromJson .Values.scheduledScaling.config }}
 {{- range $scheduledScaling.schedules }}
 apiVersion: batch/v1
 kind: CronJob
@@ -60,4 +61,5 @@ spec:
             - -c
             - kubectl scale deployment -n {{ $.Release.Namespace }} {{ $.Values.name }}-deploy --replicas={{ .replicas }}
 ---
+{{- end }}
 {{- end }}

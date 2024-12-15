@@ -106,4 +106,4 @@ spec:
             command:
             - /bin/sh
             - -c
-            - kubectl scale deployment -n cronjob-sandbox foo-deploy --replicas=5
+            - kubectl scale deployment -n cronjob-sandbox foo-deploy --replicas=3
