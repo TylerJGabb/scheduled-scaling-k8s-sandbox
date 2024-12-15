@@ -1,0 +1,30 @@
+{
+  "schedules": [
+    {
+      "name": "business-hours",
+      "startHour": 5,
+      "endHour": 17,
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "replicas": 3
+    },
+    {
+      "name": "after-hours",
+      "startHour": 17,
+      "endHour": 5,
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "replicas": 1
+    }
+  ]
+}
