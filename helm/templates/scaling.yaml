@@ -54,8 +54,12 @@ spec:
       serviceAccountName: scaling-service-account
       containers:
       - name: scaler
-        image: us-east1-docker.pkg.dev/dv01-prj-shared-art-reg-6j49/dv01-shared-art-reg-01/watching-scaler:v2
+        image: us-east1-docker.pkg.dev/dv01-prj-shared-art-reg-6j49/dv01-shared-art-reg-01/watching-scaler:v3
         env:
         - name: NAMESPACE
           value: {{ .Release.Namespace }}
+        - name: DEPLOYMENT
+          value: {{ .Values.name }}-deploy
+        - name: SCHEDULES
+          value: {{ toJson .Values.scheduledScaling.config }}
 {{- end }}

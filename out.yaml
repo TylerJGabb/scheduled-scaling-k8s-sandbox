@@ -1,12 +1,12 @@
 ---
 # Source: scheduled-scaling-sandbox/templates/scaling.yaml
-
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: scaling-service-account
   namespace: cronjob-sandbox
 ---
+# Source: scheduled-scaling-sandbox/templates/scaling.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -16,8 +16,7 @@ rules:
 - apiGroups: ["apps"] # API group for Deployments
   resources: 
   - "deployments"
-  - "deployments/scale",
-  - "namespaces"
+  - "deployments/scale"
   verbs:
   - "get"
   - "list"
@@ -25,6 +24,7 @@ rules:
   - "patch"
   - "update"
 ---
+# Source: scheduled-scaling-sandbox/templates/scaling.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -38,26 +38,6 @@ roleRef:
   kind: Role
   name: scaling-role
   apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: scaling-deployment
-  namespace: cronjob-sandbox
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: scaling
-  template:
-    metadata:
-      labels:
-        app: scaling
-    spec:
-      serviceAccountName: scaling-service-account
-      containers:
-      - name: scaler
-        image: us-east1-docker.pkg.dev/dv01-prj-shared-art-reg-6j49/dv01-shared-art-reg-01/watching-scaler:v1
 ---
 # Source: scheduled-scaling-sandbox/templates/deploy.yaml
 apiVersion: apps/v1
@@ -79,3 +59,31 @@ spec:
       - name: hello-container
         image: busybox
         command: ["sh", "-c", "while true; do echo hello; sleep 1; done"]
+---
+# Source: scheduled-scaling-sandbox/templates/scaling.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scaling-deployment
+  namespace: cronjob-sandbox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scaling
+  template:
+    metadata:
+      labels:
+        app: scaling
+    spec:
+      serviceAccountName: scaling-service-account
+      containers:
+      - name: scaler
+        image: us-east1-docker.pkg.dev/dv01-prj-shared-art-reg-6j49/dv01-shared-art-reg-01/watching-scaler:v2
+        env:
+        - name: NAMESPACE
+          value: cronjob-sandbox
+        - name: DEPLOYMENT
+          value: the-name-from-values-file-deploy
+        - name: SCHEDULES
+          value: "{\n  \"schedules\": [\n    {\n      \"name\": \"weekday\",\n      \"startHour\": 0,\n      \"endHour\": 24,\n      \"days\": [1, 2, 3, 4, 5],\n      \"replicas\": 3\n    }\n  ]\n}\n"

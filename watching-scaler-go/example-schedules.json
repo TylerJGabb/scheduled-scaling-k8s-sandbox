@@ -1,18 +1,17 @@
 {
   "schedules": [
     {
-      "name": "example-1",
+      "name": "weekday",
       "startHour": 0,
       "endHour": 24,
       "days": [
-        0,
         1,
         2,
         3,
         4,
         5
       ],
-      "replicas": 2
+      "replicas": 3
     }
   ]
 }

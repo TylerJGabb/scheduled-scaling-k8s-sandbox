@@ -70,32 +70,40 @@ func main() {
 		panic(err)
 	}
 
-	currentTime := time.Now()
-	currentHour := currentTime.Hour()
-	currentDay := int(currentTime.Weekday())
+	fmt.Printf("Found %d schedules\n", len(scheduleConfig.Schedules))
 
-	for _, schedule := range scheduleConfig.Schedules {
-		fmt.Printf("Processing schedule: %s\n", schedule.Name)
-		if arrayContains(schedule.Days, currentDay) && currentHour >= schedule.StartHour && currentHour < schedule.EndHour {
-			fmt.Printf("Matched schedule %s, scaling to %d replicas\n", schedule.Name, schedule.Replicas)
-			deployments := clientset.AppsV1().Deployments(os.Getenv("NAMESPACE"))
-			deploy, err := deployments.Get(context.Background(), os.Getenv("DEPLOYMENT"), metav1.GetOptions{})
-			if err != nil {
-				panic(err)
-			}
-			i32Replicas := int32(schedule.Replicas)
-			if *deploy.Spec.Replicas == i32Replicas {
-				fmt.Printf("Deployment %s already has %d replicas\n", deploy.Name, schedule.Replicas)
+	for {
+		currentTime := time.Now()
+		currentHour := currentTime.Hour()
+		currentDay := int(currentTime.Weekday())
+
+		fmt.Println("-----------------------------------")
+		fmt.Printf("Current time: %s, current day: %d, current hour: %d\n", currentTime, currentDay, currentHour)
+
+		for _, schedule := range scheduleConfig.Schedules {
+			fmt.Printf("Processing schedule: %s\n", schedule.Name)
+			if arrayContains(schedule.Days, currentDay) && currentHour >= schedule.StartHour && currentHour < schedule.EndHour {
+				fmt.Printf("Matched schedule %s, scaling to %d replicas\n", schedule.Name, schedule.Replicas)
+				deployments := clientset.AppsV1().Deployments(os.Getenv("NAMESPACE"))
+				deploy, err := deployments.Get(context.Background(), os.Getenv("DEPLOYMENT"), metav1.GetOptions{})
+				if err != nil {
+					panic(err)
+				}
+				i32Replicas := int32(schedule.Replicas)
+				if *deploy.Spec.Replicas == i32Replicas {
+					fmt.Printf("Deployment %s already has %d replicas\n", deploy.Name, schedule.Replicas)
+					break
+				}
+
+				deploy.Spec.Replicas = &i32Replicas
+				_, err = deployments.Update(context.Background(), deploy, metav1.UpdateOptions{})
+				if err != nil {
+					panic(err)
+				}
+				fmt.Printf("Scaled %s successfully to %d replicas", deploy.Name, schedule.Replicas)
 				break
 			}
-
-			deploy.Spec.Replicas = &i32Replicas
-			_, err = deployments.Update(context.Background(), deploy, metav1.UpdateOptions{})
-			if err != nil {
-				panic(err)
-			}
-			fmt.Printf("Scaled %s successfully to %d replicas", deploy.Name, schedule.Replicas)
-			break
 		}
+		time.Sleep(30 * time.Second)
 	}
 }

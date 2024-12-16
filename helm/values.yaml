@@ -1,19 +1,15 @@
 scheduledScaling:
   enabled: true
   config: |
-    [{
-      "name": "weekday-evening",
-      "startHour": 18,
-      "endHour": 22,
-      "days": [1, 2, 3, 4, 5],
-      "replicas": 1
-    },
     {
-      "name": "weekend",
-      "startHour": 0,
-      "endHour": 24,
-      "days": [6, 7],
-      "replicas": 2
-    }]
-
+      "schedules": [
+        {
+          "name": "weekday",
+          "startHour": 0,
+          "endHour": 24,
+          "days": [1, 2, 3, 4, 5],
+          "replicas": 3
+        }
+      ]
+    }
 name: the-name-from-values-file
