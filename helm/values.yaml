@@ -1,19 +1,19 @@
 scheduledScaling:
   enabled: true
   config: |
+    [{
+      "name": "weekday-evening",
+      "startHour": 18,
+      "endHour": 22,
+      "days": [1, 2, 3, 4, 5],
+      "replicas": 1
+    },
     {
-      "schedules": [
-        {
-          "name": "scale to 2 every 2nd minute",
-          "cron": "*/2 * * * *",
-          "replicas": 2
-        },
-        {
-          "name": "scale to 3 every 3rd minute",
-          "cron": "*/3 * * * *",
-          "replicas": 3
-        }
-      ]
-    }
+      "name": "weekend",
+      "startHour": 0,
+      "endHour": 24,
+      "days": [6, 7],
+      "replicas": 2
+    }]
 
-name: foo
+name: the-name-from-values-file

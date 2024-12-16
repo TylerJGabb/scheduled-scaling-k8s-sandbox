@@ -1,17 +1,15 @@
----
-# Source: scheduled-scaling-sandbox/templates/scaling.yaml
+{{ if .Values.scheduledScaling.enabled }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: scaling-service-account
-  namespace: cronjob-sandbox
+  namespace: {{ .Release.Namespace }}
 ---
-# Source: scheduled-scaling-sandbox/templates/scaling.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: scaling-role
-  namespace: cronjob-sandbox
+  namespace: {{ .Release.Namespace }}
 rules:
 - apiGroups: ["apps"] # API group for Deployments
   resources: 
@@ -24,48 +22,25 @@ rules:
   - "patch"
   - "update"
 ---
-# Source: scheduled-scaling-sandbox/templates/scaling.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: scaling-role-binding
-  namespace: cronjob-sandbox
+  namespace: {{ .Release.Namespace }}
 subjects:
 - kind: ServiceAccount
   name: scaling-service-account
-  namespace: cronjob-sandbox
+  namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
   name: scaling-role
   apiGroup: rbac.authorization.k8s.io
 ---
-# Source: scheduled-scaling-sandbox/templates/deploy.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: the-name-from-values-file-deploy
-  namespace: cronjob-sandbox
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: hello-app
-  template:
-    metadata:
-      labels:
-        app: hello-app
-    spec:
-      containers:
-      - name: hello-container
-        image: busybox
-        command: ["sh", "-c", "while true; do echo hello; sleep 1; done"]
----
-# Source: scheduled-scaling-sandbox/templates/scaling.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: scaling-deployment
-  namespace: cronjob-sandbox
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
@@ -86,7 +61,7 @@ spec:
         - |
           #!/bin/bash
           # Schedule configurations JSON array
-          scheduleConfigsJson='"[{\n  \"name\": \"weekday-evening\",\n  \"startHour\": 18,\n  \"endHour\": 22,\n  \"days\": [1, 2, 3, 4, 5],\n  \"replicas\": 1\n},\n{\n  \"name\": \"weekend\",\n  \"startHour\": 0,\n  \"endHour\": 24,\n  \"days\": [6, 7],\n  \"replicas\": 2\n}]\n"'
+          scheduleConfigsJson={{ toJson .Values.scheduledScaling.config }}
 
           echo "Booting..."
           echo "Raw Schedule configurations:"
@@ -125,7 +100,7 @@ spec:
 
               if [[ $currentHour -ge $startHour && $currentHour -lt $endHour && $days == *$currentDay* ]]; then
                 echo "Scaling for $scheduleName to $replicas replicas"
-                echo kubectl scale deployment the-name-from-values-file-deploy --replicas=$replicas
+                echo kubectl scale deployment {{ .Values.name }}-deploy --replicas=$replicas
                 break
               else
                 echo "Not scaling for $scheduleName"
@@ -133,3 +108,5 @@ spec:
             done
             sleep 10
           done
+
+{{- end }}
