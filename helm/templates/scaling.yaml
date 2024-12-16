@@ -54,22 +54,8 @@ spec:
       serviceAccountName: scaling-service-account
       containers:
       - name: scaler
-        image: us-east1-docker.pkg.dev/dv01-prj-shared-art-reg-6j49/dv01-shared-art-reg-01/scaling-sandbox:v1
-        command:
-        - /bin/sh
-        - -c
-        - |
-          echo 123
-          sleep 1
-          echo 456
-          sleep 1
-          kubectl version
-          sleep 1
-          node -e '
-          for (let i = 0; i < 100; i++) {
-            console.log("Hello, world!");
-          }
-          '
-          sleep 100
-
+        image: us-east1-docker.pkg.dev/dv01-prj-shared-art-reg-6j49/dv01-shared-art-reg-01/watching-scaler:v2
+        env:
+        - name: NAMESPACE
+          value: {{ .Release.Namespace }}
 {{- end }}

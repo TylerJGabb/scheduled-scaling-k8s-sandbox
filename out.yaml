@@ -1,22 +1,23 @@
 ---
 # Source: scheduled-scaling-sandbox/templates/scaling.yaml
+
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: scaling-service-account
   namespace: cronjob-sandbox
 ---
-# Source: scheduled-scaling-sandbox/templates/scaling.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: scaling-role
   namespace: cronjob-sandbox
 rules:
-- apiGroups: [ "apps" ] # API group for Deployments
-  resources:
+- apiGroups: ["apps"] # API group for Deployments
+  resources: 
   - "deployments"
-  - "deployments/scale"
+  - "deployments/scale",
+  - "namespaces"
   verbs:
   - "get"
   - "list"
@@ -24,7 +25,6 @@ rules:
   - "patch"
   - "update"
 ---
-# Source: scheduled-scaling-sandbox/templates/scaling.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -38,6 +38,26 @@ roleRef:
   kind: Role
   name: scaling-role
   apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scaling-deployment
+  namespace: cronjob-sandbox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scaling
+  template:
+    metadata:
+      labels:
+        app: scaling
+    spec:
+      serviceAccountName: scaling-service-account
+      containers:
+      - name: scaler
+        image: us-east1-docker.pkg.dev/dv01-prj-shared-art-reg-6j49/dv01-shared-art-reg-01/watching-scaler:v1
 ---
 # Source: scheduled-scaling-sandbox/templates/deploy.yaml
 apiVersion: apps/v1
@@ -58,32 +78,4 @@ spec:
       containers:
       - name: hello-container
         image: busybox
-        command: [ "sh", "-c", "while true; do echo hello; sleep 1; done" ]
----
-# Source: scheduled-scaling-sandbox/templates/scaling.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: scaling-deployment
-  namespace: cronjob-sandbox
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: scaling
-  template:
-    metadata:
-      labels:
-        app: scaling
-    spec:
-      serviceAccountName: scaling-service-account
-      containers:
-      - name: scaler
-        image: us-east1-docker.pkg.dev/dv01-prj-shared-art-reg-6j49/dv01-shared-art-reg-01/scaling-sandbox:v1
-        command:
-        - /bin/sh
-        - -c
-        - sleep 100
----
-
-
+        command: ["sh", "-c", "while true; do echo hello; sleep 1; done"]

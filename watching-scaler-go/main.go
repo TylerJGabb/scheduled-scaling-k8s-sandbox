@@ -35,13 +35,13 @@ func main() {
 		panic(err)
 	}
 
-	// list all namespaces
-	namespaces, err := clientset.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+	// list all deployments in the current namespace
+	deployments, err := clientset.AppsV1().Deployments(os.Getenv("NAMESPACE")).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}
-	for _, namespace := range namespaces.Items {
-		fmt.Println(namespace.Name)
+	for _, d := range deployments.Items {
+		fmt.Printf("Deployment %s - %d replicas\n", d.Name, *d.Spec.Replicas)
 	}
 
 }
