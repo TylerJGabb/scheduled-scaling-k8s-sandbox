@@ -11,7 +11,7 @@ scheduleConfigsJson='[
   },
   {
     "name": "weekend",
-    "startHour": 20,
+    "startHour": 0,
     "endHour": 24,
     "days": [6, 7],
     "replicas": 2
@@ -32,8 +32,8 @@ echo "Boot Successful"
 
 while true; do
   # Get current day and hour
-  currentDay=$(date +%u)  # Day of the week (1-7, Monday is 1)
-  currentHour=$(date +%H) # Hour of the day (00-23)
+  currentDay=$(TZ="America/New_York" date +%u)  # Day of the week (1-7, Monday is 1)
+  currentHour=$(TZ="America/New_York" date +%H) # Hour of the day (00-23)
 
   echo "----------------------------------"
   echo "Current day: $currentDay"

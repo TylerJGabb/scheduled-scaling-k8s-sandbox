@@ -54,59 +54,22 @@ spec:
       serviceAccountName: scaling-service-account
       containers:
       - name: scaler
-        image: bitnami/kubectl:latest
+        image: us-east1-docker.pkg.dev/dv01-prj-shared-art-reg-6j49/dv01-shared-art-reg-01/scaling-sandbox:v1
         command:
         - /bin/sh
         - -c
         - |
-          #!/bin/bash
-          # Schedule configurations JSON array
-          scheduleConfigsJson={{ toJson .Values.scheduledScaling.config }}
-
-          echo "Booting..."
-          echo "Raw Schedule configurations:"
-          echo "$scheduleConfigsJson"
-
-          echo "Parsed Schedule configurations:"
-          echo "$scheduleConfigsJson" | jq . 2>&1
-          if [ $? -ne 0 ]; then
-            echo "Invalid JSON"
-            exit 1
-          fi
-          echo "Boot Successful"
-
-          while true; do
-            # Get current day and hour
-            currentDay=$(date +%u)  # Day of the week (1-7, Monday is 1)
-            currentHour=$(date +%H) # Hour of the day (00-23)
-
-            echo "----------------------------------"
-            echo "Current day: $currentDay"
-            echo "Current hour: $currentHour"
-
-            # Iterate over each scheduleConfig
-            echo "$scheduleConfigsJson" | jq -c '.[]' | while read -r scheduleConfigJson; do
-              echo "----------------------------------"
-              # Extract fields from the current scheduleConfig
-              scheduleName=$(echo "$scheduleConfigJson" | jq -r '.name')
-              startHour=$(echo "$scheduleConfigJson" | jq -r '.startHour')
-              endHour=$(echo "$scheduleConfigJson" | jq -r '.endHour')
-              days=$(echo "$scheduleConfigJson" | jq -r '.days')
-              replicas=$(echo "$scheduleConfigJson" | jq -r '.replicas')
-
-              echo "Checking schedule: $scheduleName"
-              echo "Start hour: $startHour, End hour: $endHour"
-              echo "Days: $days, Replicas: $replicas"
-
-              if [[ $currentHour -ge $startHour && $currentHour -lt $endHour && $days == *$currentDay* ]]; then
-                echo "Scaling for $scheduleName to $replicas replicas"
-                echo kubectl scale deployment {{ .Values.name }}-deploy --replicas=$replicas
-                break
-              else
-                echo "Not scaling for $scheduleName"
-              fi
-            done
-            sleep 10
-          done
+          echo 123
+          sleep 1
+          echo 456
+          sleep 1
+          kubectl version
+          sleep 1
+          node -e '
+          for (let i = 0; i < 100; i++) {
+            console.log("Hello, world!");
+          }
+          '
+          sleep 100
 
 {{- end }}
