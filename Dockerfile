@@ -19,3 +19,6 @@ RUN apk add --no-cache nodejs npm
 
 # Verify installation
 RUN node --version && npm --version
+
+COPY ./watching-scaler/index.js .
+ENTRYPOINT [ "node", "index.js" ]
