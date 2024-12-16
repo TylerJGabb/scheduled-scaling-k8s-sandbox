@@ -1,0 +1,1 @@
+SCHEDULES=$(cat example-schedules.json) LOCAL=true NAMESPACE=cronjob-sandbox DEPLOYMENT=the-name-from-values-file-deploy go run .
