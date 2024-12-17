@@ -79,11 +79,11 @@ spec:
       serviceAccountName: scaling-service-account
       containers:
       - name: scaler
-        image: us-east1-docker.pkg.dev/dv01-prj-shared-art-reg-6j49/dv01-shared-art-reg-01/watching-scaler:v2
+        image: us-east1-docker.pkg.dev/dv01-prj-shared-art-reg-6j49/dv01-shared-art-reg-01/watching-scaler:v6
         env:
         - name: NAMESPACE
           value: cronjob-sandbox
         - name: DEPLOYMENT
           value: the-name-from-values-file-deploy
         - name: SCHEDULES
-          value: "{\n  \"schedules\": [\n    {\n      \"name\": \"weekday\",\n      \"startHour\": 0,\n      \"endHour\": 24,\n      \"days\": [1, 2, 3, 4, 5],\n      \"replicas\": 3\n    }\n  ]\n}\n"
+          value: "{\n  \"schedules\": [\n    {\n      \"name\": \"weekday\",\n      \"startTime\": \"00:00\",\n      \"durationMinutes\": 1440,\n      \"days\": [1, 2, 3, 4, 5],\n      \"replicas\": 3\n    }\n  ]\n}\n"

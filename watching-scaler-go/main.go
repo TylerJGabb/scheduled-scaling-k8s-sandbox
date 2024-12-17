@@ -16,6 +16,8 @@ import (
 	"watxhing-scaler-go/utils"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	_ "time/tzdata"
 )
 
 func getClientset() (*kubernetes.Clientset, error) {
@@ -49,7 +51,10 @@ func main() {
 	scheduleConfig := models.SchedulesConfig{}
 	err = json.Unmarshal([]byte(os.Getenv("SCHEDULES")), &scheduleConfig)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("Error parsing schedules: %s", err))
+	}
+	if err := scheduleConfig.Validate(); err != nil {
+		panic(fmt.Errorf("Error validating schedules: %s", err))
 	}
 
 	fmt.Printf("Found %d schedules\n", len(scheduleConfig.Schedules))
@@ -82,7 +87,7 @@ func main() {
 				if err != nil {
 					panic(err)
 				}
-				fmt.Printf("Scaled %s successfully to %d replicas", deploy.Name, schedule.Replicas)
+				fmt.Printf("Scaled %s successfully to %d replicas\n", deploy.Name, schedule.Replicas)
 				break
 			}
 		}

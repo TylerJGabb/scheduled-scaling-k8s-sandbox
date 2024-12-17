@@ -5,8 +5,8 @@ scheduledScaling:
       "schedules": [
         {
           "name": "weekday",
-          "startHour": 0,
-          "endHour": 24,
+          "startTime": "00:00",
+          "durationMinutes": 1440,
           "days": [1, 2, 3, 4, 5],
           "replicas": 3
         }
