@@ -12,20 +12,11 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"watxhing-scaler-go/models"
+	"watxhing-scaler-go/utils"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-type ScheduleConfig struct {
-	Name      string `json:"name"`
-	StartHour int    `json:"startHour"`
-	EndHour   int    `json:"endHour"`
-	Replicas  int    `json:"replicas"`
-	Days      []int  `json:"days"`
-}
-
-type SchedulesConfig struct {
-	Schedules []ScheduleConfig `json:"schedules"`
-}
 
 func getClientset() (*kubernetes.Clientset, error) {
 	var config *rest.Config
@@ -48,15 +39,6 @@ func getClientset() (*kubernetes.Clientset, error) {
 	return clientset, err
 }
 
-func arrayContains(arr []int, elem int) bool {
-	for _, item := range arr {
-		if item == elem {
-			return true
-		}
-	}
-	return false
-}
-
 func main() {
 
 	clientset, err := getClientset()
@@ -64,7 +46,7 @@ func main() {
 		panic(err)
 	}
 
-	scheduleConfig := SchedulesConfig{}
+	scheduleConfig := models.SchedulesConfig{}
 	err = json.Unmarshal([]byte(os.Getenv("SCHEDULES")), &scheduleConfig)
 	if err != nil {
 		panic(err)
@@ -73,16 +55,16 @@ func main() {
 	fmt.Printf("Found %d schedules\n", len(scheduleConfig.Schedules))
 
 	for {
-		currentTime := time.Now()
-		currentHour := currentTime.Hour()
-		currentDay := int(currentTime.Weekday())
+		current := time.Now()
 
 		fmt.Println("-----------------------------------")
-		fmt.Printf("Current time: %s, current day: %d, current hour: %d\n", currentTime, currentDay, currentHour)
+		fmt.Printf("Current time: %s\n", current)
 
 		for _, schedule := range scheduleConfig.Schedules {
 			fmt.Printf("Processing schedule: %s\n", schedule.Name)
-			if arrayContains(schedule.Days, currentDay) && currentHour >= schedule.StartHour && currentHour < schedule.EndHour {
+			// start and end are in the format HH:MM
+
+			if utils.IsTimeInSchedule(current, schedule) {
 				fmt.Printf("Matched schedule %s, scaling to %d replicas\n", schedule.Name, schedule.Replicas)
 				deployments := clientset.AppsV1().Deployments(os.Getenv("NAMESPACE"))
 				deploy, err := deployments.Get(context.Background(), os.Getenv("DEPLOYMENT"), metav1.GetOptions{})

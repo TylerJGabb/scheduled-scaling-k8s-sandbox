@@ -2,14 +2,10 @@
   "schedules": [
     {
       "name": "weekday",
-      "startHour": 0,
-      "endHour": 24,
+      "startTime": "22:00",
+      "durationMinutes": 240,
       "days": [
-        1,
-        2,
-        3,
-        4,
-        5
+        1
       ],
       "replicas": 3
     }
