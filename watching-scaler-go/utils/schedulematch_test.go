@@ -7,8 +7,8 @@ import (
 	"watxhing-scaler-go/utils"
 )
 
-func TestIsTimeInSchedule_Happy(t *testing.T) {
-	t1 := time.Date(2021, 1, 1, 12, 30, 0, 0, utils.NYC)
+func Test_IsTimeInSchedule_Happy(t *testing.T) {
+	t1 := time.Date(2021, 1, 1, 12, 30, 0, 0, utils.TIMEZONE)
 	schedule := models.ScheduleConfig{
 		Name:            "test",
 		StartTime:       "12:00",
@@ -33,8 +33,8 @@ func TestIsTimeInSchedule_Happy(t *testing.T) {
 	}
 }
 
-func TestIsTimeInSchedule_SpansMidnight(t *testing.T) {
-	t1 := time.Date(2021, 1, 1, 1, 30, 0, 0, utils.NYC)
+func Test_IsTimeInSchedule_SpansMidnight(t *testing.T) {
+	t1 := time.Date(2021, 1, 1, 1, 30, 0, 0, utils.TIMEZONE)
 	schedule := models.ScheduleConfig{
 		Name:            "test",
 		StartTime:       "23:00",
@@ -44,5 +44,17 @@ func TestIsTimeInSchedule_SpansMidnight(t *testing.T) {
 	}
 	if !utils.IsTimeInSchedule(t1, schedule) {
 		t.Error("Expected true, got false")
+	}
+	t2 := t1.Add(-time.Hour * 2)
+	if !utils.IsTimeInSchedule(t2, schedule) {
+		t.Error("Expected true, got false")
+	}
+	t3 := t1.Add(-time.Hour * 4)
+	if utils.IsTimeInSchedule(t3, schedule) {
+		t.Error("Expected false, got true")
+	}
+	t4 := t1.Add(time.Hour * 3)
+	if utils.IsTimeInSchedule(t4, schedule) {
+		t.Error("Expected false, got true")
 	}
 }

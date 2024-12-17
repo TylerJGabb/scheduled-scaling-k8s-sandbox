@@ -1,12 +1,24 @@
 package utils
 
 import (
-	"fmt"
+	"os"
 	"time"
 	"watxhing-scaler-go/models"
 )
 
-var NYC, _ = time.LoadLocation("America/New_York")
+func getTimezone() *time.Location {
+	tz := os.Getenv("IANA_TIMEZONE")
+	if tz == "" {
+		tz = "America/New_York"
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		panic(err)
+	}
+	return loc
+}
+
+var TIMEZONE = getTimezone()
 
 func arrayContains(arr []int, elem int) bool {
 	for _, item := range arr {
@@ -22,48 +34,24 @@ func IsTimeInSchedule(
 	schedule models.ScheduleConfig,
 ) bool {
 	weekday := int(t.Weekday())
-	if arrayContains(schedule.Days, weekday) {
-		start, _ := time.Parse("15:04", schedule.StartTime)
-		start = time.Date(
-			t.Year(),
-			t.Month(),
-			t.Day(),
-			start.Hour(),
-			start.Minute(),
-			t.Second(),
-			t.Nanosecond(),
-			NYC,
-		)
-		end := start.Add(time.Minute * time.Duration(schedule.DurationMinutes))
-		fmt.Printf("Start:   %v\n", start)
-		fmt.Printf("End:     %v\n", end)
-		fmt.Printf("Current: %v\n", t)
-
-		if t.After(start) && t.Before(end) {
-			return true
-		}
+	start, _ := time.Parse("15:04", schedule.StartTime)
+	start = time.Date(
+		t.Year(),
+		t.Month(),
+		t.Day(),
+		start.Hour(),
+		start.Minute(),
+		t.Second(),
+		t.Nanosecond(),
+		TIMEZONE,
+	)
+	end := start.Add(time.Minute * time.Duration(schedule.DurationMinutes))
+	if arrayContains(schedule.Days, weekday) && t.After(start) && t.Before(end) {
+		return true
 	}
-	if arrayContains(schedule.Days, (weekday-1)%7) {
-		start, _ := time.Parse("15:04", schedule.StartTime)
-		start = time.Date(
-			t.Year(),
-			t.Month(),
-			t.Day(),
-			start.Hour(),
-			start.Minute(),
-			t.Second(),
-			t.Nanosecond(),
-			NYC,
-		)
-		start = start.Add(-time.Hour * 24)
-		end := start.Add(time.Minute * time.Duration(schedule.DurationMinutes))
-		fmt.Printf("Start:   %v\n", start)
-		fmt.Printf("End:     %v\n", end)
-		fmt.Printf("Current: %v\n", t)
 
-		if t.After(start) && t.Before(end) {
-			return true
-		}
-	}
-	return false
+	previousWeekday := (weekday - 1) % 7
+	start = start.Add(-time.Hour * 24)
+	end = start.Add(time.Minute * time.Duration(schedule.DurationMinutes))
+	return arrayContains(schedule.Days, previousWeekday) && t.After(start) && t.Before(end)
 }

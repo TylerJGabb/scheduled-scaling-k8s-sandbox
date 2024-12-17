@@ -58,7 +58,7 @@ func main() {
 		current := time.Now()
 
 		fmt.Println("-----------------------------------")
-		fmt.Printf("Current time: %s\n", current)
+		fmt.Printf("Current time: %v\n", current.In(utils.TIMEZONE))
 
 		for _, schedule := range scheduleConfig.Schedules {
 			fmt.Printf("Processing schedule: %s\n", schedule.Name)
