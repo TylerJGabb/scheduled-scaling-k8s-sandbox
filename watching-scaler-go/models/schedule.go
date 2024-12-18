@@ -3,6 +3,8 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"time"
+	"watxhing-scaler-go/utils"
 )
 
 type ScheduleConfig struct {
@@ -12,6 +14,31 @@ type ScheduleConfig struct {
 	Replicas        int    `json:"replicas"`
 	Days            []int  `json:"days"`
 }
+
+func (schedule ScheduleConfig) IsActive(t time.Time) bool {
+	weekday := int(t.Weekday())
+	start, _ := time.Parse("15:04", schedule.StartTime)
+	start = time.Date(
+		t.Year(),
+		t.Month(),
+		t.Day(),
+		start.Hour(),
+		start.Minute(),
+		t.Second(),
+		t.Nanosecond(),
+		utils.TIMEZONE,
+	)
+	end := start.Add(time.Minute * time.Duration(schedule.DurationMinutes))
+	if utils.ArrayContains(schedule.Days, weekday) && t.After(start) && t.Before(end) {
+		return true
+	}
+
+	previousWeekday := (weekday - 1) % 7
+	start = start.Add(-time.Hour * 24)
+	end = start.Add(time.Minute * time.Duration(schedule.DurationMinutes))
+	return utils.ArrayContains(schedule.Days, previousWeekday) && t.After(start) && t.Before(end)
+}
+
 type SchedulesConfig struct {
 	Schedules []ScheduleConfig `json:"schedules"`
 }
@@ -41,15 +68,15 @@ func (s *ScheduleConfig) Validate() error {
 	if s.DurationMinutes <= 0 {
 		return fmt.Errorf("`durationMinutes` must be present and greater than 0 for schedule %s", s.Name)
 	}
-	if s.Replicas <= 0 || s.Replicas > 10 {
-		return fmt.Errorf("`replicas` must be present and between 1 and 10 for schedule %s", s.Name)
+	if s.Replicas < 0 || s.Replicas > 10 {
+		return fmt.Errorf("`replicas` must be present and within [0, 10] for schedule %s", s.Name)
 	}
 	if len(s.Days) == 0 {
 		return fmt.Errorf("`days` must be present for schedule %s", s.Name)
 	}
 	for _, day := range s.Days {
 		if day < 0 || day > 6 {
-			return fmt.Errorf("each day in `days` must be between 0 and 6 for schedule %s", s.Name)
+			return fmt.Errorf("each day in `days` must be within [0, 6] for schedule %s", s.Name)
 		}
 	}
 	return nil

@@ -1,23 +1,21 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
+	"watxhing-scaler-go/k8sclient"
+	"watxhing-scaler-go/models"
+	"watxhing-scaler-go/scaler"
+
+	_ "time/tzdata"
+
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-
-	"watxhing-scaler-go/models"
-	"watxhing-scaler-go/utils"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	_ "time/tzdata"
 )
 
 func getClientset() (*kubernetes.Clientset, error) {
@@ -42,55 +40,39 @@ func getClientset() (*kubernetes.Clientset, error) {
 }
 
 func main() {
-
-	clientset, err := getClientset()
-	if err != nil {
-		panic(err)
+	ns := os.Getenv("NAMESPACE")
+	if ns == "" {
+		panic("NAMESPACE environment variable is required")
 	}
-
+	deployName := os.Getenv("DEPLOYMENT")
+	if deployName == "" {
+		panic("DEPLOYMENT environment variable is required")
+	}
+	schedules := os.Getenv("SCHEDULES")
+	if schedules == "" {
+		panic("SCHEDULES environment variable is required")
+	}
 	scheduleConfig := models.SchedulesConfig{}
-	err = json.Unmarshal([]byte(os.Getenv("SCHEDULES")), &scheduleConfig)
-	if err != nil {
+	if err := json.Unmarshal([]byte(schedules), &scheduleConfig); err != nil {
 		panic(fmt.Errorf("Error parsing schedules: %s", err))
 	}
+
 	if err := scheduleConfig.Validate(); err != nil {
 		panic(fmt.Errorf("Error validating schedules: %s", err))
 	}
 
 	fmt.Printf("Found %d schedules\n", len(scheduleConfig.Schedules))
 
+	clientset, err := getClientset()
+	if err != nil {
+		panic(fmt.Errorf("Error creating k8s clientset: %s", err))
+	}
+
+	client := k8sclient.New(clientset)
+	s := scaler.NewScaler(client, scheduleConfig.Schedules, ns, deployName)
+
 	for {
-		current := time.Now()
-
-		fmt.Println("-----------------------------------")
-		fmt.Printf("Current time: %v\n", current.In(utils.TIMEZONE))
-
-		for _, schedule := range scheduleConfig.Schedules {
-			fmt.Printf("Processing schedule: %s\n", schedule.Name)
-			// start and end are in the format HH:MM
-
-			if utils.IsTimeInSchedule(current, schedule) {
-				fmt.Printf("Matched schedule %s, scaling to %d replicas\n", schedule.Name, schedule.Replicas)
-				deployments := clientset.AppsV1().Deployments(os.Getenv("NAMESPACE"))
-				deploy, err := deployments.Get(context.Background(), os.Getenv("DEPLOYMENT"), metav1.GetOptions{})
-				if err != nil {
-					panic(err)
-				}
-				i32Replicas := int32(schedule.Replicas)
-				if *deploy.Spec.Replicas == i32Replicas {
-					fmt.Printf("Deployment %s already has %d replicas\n", deploy.Name, schedule.Replicas)
-					break
-				}
-
-				deploy.Spec.Replicas = &i32Replicas
-				_, err = deployments.Update(context.Background(), deploy, metav1.UpdateOptions{})
-				if err != nil {
-					panic(err)
-				}
-				fmt.Printf("Scaled %s successfully to %d replicas\n", deploy.Name, schedule.Replicas)
-				break
-			}
-		}
+		s.ApplyScheduledScalings(scheduleConfig.Schedules)
 		time.Sleep(30 * time.Second)
 	}
 }
