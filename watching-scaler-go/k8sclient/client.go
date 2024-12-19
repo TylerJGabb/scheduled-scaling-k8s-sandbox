@@ -38,7 +38,7 @@ func (c *ClientImpl) ScaleDeployment(namespace string, deploymentName string, re
 	if deploy.Annotations == nil {
 		deploy.Annotations = make(map[string]string)
 	}
-	deploy.Annotations["lastScaledAt"] = time.Now().Format(time.RFC3339)
+	deploy.Annotations["lastScaledAt"] = time.Now().UTC().Format(time.RFC3339)
 	_, err = deployments.Update(context.Background(), deploy, metav1.UpdateOptions{})
 	if err != nil {
 		return err

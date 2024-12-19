@@ -1,6 +1,6 @@
 include .env
 export $(shell sed 's/=.*//' .env)
-TAG=v7
+TAG=v8
 NAME=cronjob-sandbox
 
 template:
