@@ -39,7 +39,7 @@ func (schedule ScheduleConfig) IsActive(t time.Time) bool {
 		t.Nanosecond(),
 		utils.TIMEZONE,
 	)
-	if end.Hour() <= start.Hour() {
+	if end.Before(start) || end.Equal(start) {
 		end = end.Add(time.Hour * 24)
 	}
 
