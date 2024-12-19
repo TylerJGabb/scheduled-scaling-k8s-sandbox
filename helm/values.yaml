@@ -13,3 +13,5 @@ scheduledScaling:
       ]
     }
 name: the-name-from-values-file
+image: default-image-from-values-file
+tag: default-tag-from-values-file

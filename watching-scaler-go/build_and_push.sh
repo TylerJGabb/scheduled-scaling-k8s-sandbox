@@ -1,3 +1,5 @@
+. ../.env
+echo $FQIN
 docker build --platform=linux/amd64 -t watching-scaler .
-docker tag watching-scaler us-east1-docker.pkg.dev/dv01-prj-shared-art-reg-6j49/dv01-shared-art-reg-01/watching-scaler:v7
-docker push us-east1-docker.pkg.dev/dv01-prj-shared-art-reg-6j49/dv01-shared-art-reg-01/watching-scaler:v7
+docker tag watching-scaler $FQIN:v7
+docker push $FQIN:v7
