@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+        - SCHEDULES=${SCHEDULES}
+        - NAMESPACE=foo
+        - DEPLOYMENT=bar
+        - KUBECONFIG=/root/.kube/config
+        - LOCAL=true

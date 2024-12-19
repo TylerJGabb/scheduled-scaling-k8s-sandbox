@@ -1,0 +1,17 @@
+scheduledScaling:
+  enabled: true
+  config: |
+    {
+      "schedules": [
+        {
+          "name": "weekday",
+          "startTime": "00:00",
+          "endTime": "00:00",
+          "days": [1, 2, 3, 4, 5],
+          "replicas": 3
+        }
+      ]
+    }
+name: the-name-from-values-file
+image: default-image-from-values-file
+tag: default-tag-from-values-file
