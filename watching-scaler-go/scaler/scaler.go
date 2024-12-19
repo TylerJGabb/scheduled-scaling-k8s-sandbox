@@ -26,10 +26,11 @@ func NewScaler(
 	}
 }
 
-func (s *Scaler) ApplyScheduledScalings(schedules []models.ScheduleConfig) {
+func (s *Scaler) ApplyScheduledScalings(
+	t time.Time,
+	schedules []models.ScheduleConfig) {
 	for _, schedule := range schedules {
-		currentTime := time.Now()
-		if schedule.IsActive(currentTime) {
+		if schedule.IsActive(t) {
 			err := s.client.ScaleDeployment(
 				s.namespace,
 				s.deploymentName,

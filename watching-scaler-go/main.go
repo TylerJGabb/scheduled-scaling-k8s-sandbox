@@ -72,7 +72,8 @@ func main() {
 	s := scaler.NewScaler(client, scheduleConfig.Schedules, ns, deployName)
 
 	for {
-		s.ApplyScheduledScalings(scheduleConfig.Schedules)
+		t := time.Now()
+		s.ApplyScheduledScalings(t, scheduleConfig.Schedules)
 		time.Sleep(30 * time.Second)
 	}
 }

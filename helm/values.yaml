@@ -6,7 +6,7 @@ scheduledScaling:
         {
           "name": "weekday",
           "startTime": "00:00",
-          "durationMinutes": 1440,
+          "endTime": "00:00",
           "days": [1, 2, 3, 4, 5],
           "replicas": 3
         }

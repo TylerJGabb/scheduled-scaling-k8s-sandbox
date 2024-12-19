@@ -43,6 +43,9 @@ func Test_ScaleDeployment_NeedsScaling(t *testing.T) {
 		t.Errorf("Expected 2, got %d", *deploy.Spec.Replicas)
 	}
 
+	if deploy.Annotations["lastScaledAt"] == "" {
+		t.Error("Expected lastScaledAt annotation to be set")
+	}
 	scaledAt, err := time.Parse(time.RFC3339, deploy.Annotations["lastScaledAt"])
 	if err != nil {
 		t.Errorf("Error parsing time: %v", err)
