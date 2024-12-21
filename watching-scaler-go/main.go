@@ -69,11 +69,13 @@ func main() {
 	}
 
 	client := k8sclient.New(clientset)
-	s := scaler.NewScaler(client, scheduleConfig.Schedules, ns, deployName)
+	s := scaler.NewScaler(client, ns, deployName)
 
 	for {
 		t := time.Now()
-		s.ApplyScheduledScalings(t, scheduleConfig.Schedules)
+		if err := s.ApplyScheduledScalings(t, scheduleConfig.Schedules); err != nil {
+			fmt.Printf("Error applying scheduled scalings: %s\n", err)
+		}
 		time.Sleep(30 * time.Second)
 	}
 }

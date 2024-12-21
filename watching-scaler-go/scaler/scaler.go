@@ -15,7 +15,6 @@ type Scaler struct {
 
 func NewScaler(
 	client k8sclient.Client,
-	schedules []models.ScheduleConfig,
 	namespace string,
 	deploymentName string,
 ) *Scaler {
@@ -26,20 +25,15 @@ func NewScaler(
 	}
 }
 
-func (s *Scaler) ApplyScheduledScalings(
-	t time.Time,
-	schedules []models.ScheduleConfig) {
+func (s *Scaler) ApplyScheduledScalings(t time.Time, schedules []models.ScheduleConfig) error {
 	for _, schedule := range schedules {
 		if schedule.IsActive(t) {
-			err := s.client.ScaleDeployment(
-				s.namespace,
-				s.deploymentName,
-				schedule.Replicas,
-			)
-			if err != nil {
-				fmt.Printf("Error scaling deployment: %v\n", err)
+			fmt.Printf("Applying schedule '%s' with target replicas '%d'\n", schedule.Name, schedule.Replicas)
+			if err := s.client.ScaleDeployment(s.namespace, s.deploymentName, schedule.Replicas); err != nil {
+				return err
 			}
-			return // stop after the first matched schedule
+			return nil // stop after the first matched schedule
 		}
 	}
+	return nil
 }

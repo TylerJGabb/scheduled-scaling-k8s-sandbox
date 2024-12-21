@@ -1,6 +1,7 @@
 package scaler_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 	"watxhing-scaler-go/models"
@@ -51,15 +52,19 @@ var testSchedules = []models.ScheduleConfig{
 }
 
 type TestClient struct {
+	throw    error
 	replicas int
 }
 
 func (tc *TestClient) ScaleDeployment(namespace string, deploymentName string, replicas int) error {
+	if tc.throw != nil {
+		return tc.throw
+	}
 	tc.replicas = replicas
 	return nil
 }
 
-func Test_ImplementMe(t *testing.T) {
+func Test_ApplyScheduledScalings_AllSchedulesApplied(t *testing.T) {
 	mondayBusiness := time.Date(2021, 1, 4, 8, 0, 0, 0, utils.TIMEZONE)
 	mondayOff := time.Date(2021, 1, 4, 22, 0, 0, 0, utils.TIMEZONE)
 	fridayOff := time.Date(2021, 1, 8, 22, 0, 0, 0, utils.TIMEZONE)
@@ -70,7 +75,7 @@ func Test_ImplementMe(t *testing.T) {
 		replicas: 0,
 	}
 
-	s := scaler.NewScaler(tc, testSchedules, "test", "test")
+	s := scaler.NewScaler(tc, "test", "test")
 
 	s.ApplyScheduledScalings(mondayBusiness, testSchedules)
 	if tc.replicas != 1 {
@@ -95,5 +100,35 @@ func Test_ImplementMe(t *testing.T) {
 	s.ApplyScheduledScalings(sunday, testSchedules)
 	if tc.replicas != 5 {
 		t.Errorf("Expected 5, got %d", tc.replicas)
+	}
+}
+
+func Test_ApplyScheduledScalings_IfNoSchedulesMatchNothingIsDone(t *testing.T) {
+
+	tc := &TestClient{
+		replicas: 0,
+	}
+
+	monday := time.Date(2021, 1, 4, 8, 0, 0, 0, utils.TIMEZONE)
+	s := scaler.NewScaler(tc, "test", "test")
+
+	s.ApplyScheduledScalings(monday, []models.ScheduleConfig{})
+	if tc.replicas != 0 {
+		t.Errorf("Expected 0, got %d", tc.replicas)
+	}
+}
+
+func Test_ApplyScheduledScalings_IfClientHasErrorThatErrorIsPassedOut(t *testing.T) {
+	expectedError := fmt.Errorf("test error")
+	tc := &TestClient{
+		throw: expectedError,
+	}
+
+	monday := time.Date(2021, 1, 4, 8, 0, 0, 0, utils.TIMEZONE)
+	s := scaler.NewScaler(tc, "test", "test")
+
+	err := s.ApplyScheduledScalings(monday, testSchedules)
+	if err != expectedError {
+		t.Errorf("Expected %v, got %v", expectedError, err)
 	}
 }

@@ -93,3 +93,14 @@ func Test_ScaleDeployment_AlreadyScaled(t *testing.T) {
 	}
 
 }
+
+func Test_ScaleDeployment_ErrorWithClient(t *testing.T) {
+	clientset := fake.NewSimpleClientset()
+
+	client := k8sclient.New(clientset)
+
+	err := client.ScaleDeployment("test", "test", 2)
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+}
