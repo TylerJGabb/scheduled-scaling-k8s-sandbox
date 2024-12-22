@@ -9,6 +9,13 @@ scheduledScaling:
           "endTime": "00:00",
           "days": [1, 2, 3, 4, 5],
           "replicas": 3
+        },
+        {
+          "name": "weekend",
+          "startTime": "00:00",
+          "endTime": "00:00",
+          "days": [6, 0],
+          "replicas": 1
         }
       ]
     }
